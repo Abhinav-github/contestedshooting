@@ -7,7 +7,7 @@ import requests
 import sqlite3
 
 app = Flask(__name__)
-#this value is not stored on github, change if you want to run your own local version
+#this value and function are not stored on github, change if you want to run your own local version
 SECRET_KEY = get_key()
 app.config['SECRET_KEY'] = SECRET_KEY
 
@@ -28,6 +28,23 @@ def post(post_id):
     if post is None:
         return jsonify('try again'), 404
     return render_template('post.html', post=post)
+
+@app.route('/create', methods=('GET', 'POST'))
+def create():
+    if request.method == 'POST':
+        title = request.form['title']
+        content = request.form['content']
+
+        if not title:
+            flash('Title is required!')
+        else:
+            conn = get_db_connection()
+            conn.execute('INSERT INTO posts (title, content) VALUES (?, ?)',
+                         (title, content))
+            conn.commit()
+            conn.close()
+            return redirect(url_for('index'))
+    return render_template('create.html')
 
 def get_db_connection():
     conn = sqlite3.connect('database.db')
